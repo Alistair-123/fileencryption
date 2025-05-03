@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Encryption and Decryption Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-10 max-w-3xl">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">File Encryption and Decryption Tool</h1>
+                <h1>Loberternos File Encryption Method</h1>
+                <!-- Tabs -->
+                <div class="flex border-b border-gray-200 mb-6">
+                    <button id="encryptTab" class="px-4 py-2 font-medium text-sm text-blue-600 border-b-2 border-blue-600">Encrypt</button>
+                    <button id="decryptTab" class="px-4 py-2 font-medium text-sm text-gray-500 hover:text-gray-700">Decrypt</button>
+                </div>
+                
+                <!-- Encrypt Tab Content -->
+                <div id="encryptContent" class="mb-4">
+                    <div class="mb-4">
+                        <label for="fileToEncrypt" class="block text-sm font-medium text-gray-700 mb-1">Select File to Encrypt</label>
+                        <input type="file" id="fileToEncrypt" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="encryptPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="encryptPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter encryption password">
+                    </div>
+                    
+                    <button id="encryptBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Encrypt File
+                    </button>
+                </div>
+                
+                <!-- Decrypt Tab Content -->
+                <div id="decryptContent" class="hidden mb-4">
+                    <div class="mb-4">
+                        <label for="fileToDecrypt" class="block text-sm font-medium text-gray-700 mb-1">Select Encrypted File</label>
+                        <input type="file" id="fileToDecrypt" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="decryptPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="decryptPassword" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter decryption password">
+                    </div>
+                    
+                    <button id="decryptBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        Decrypt File
+                    </button>
+                </div>
+
+                <!-- Status and Feedback -->
+                <div id="status" class="mt-6 text-center"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        document.getElementById('encryptTab').addEventListener('click', function() {
+            document.getElementById('encryptTab').classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+            document.getElementById('encryptTab').classList.remove('text-gray-500');
+            document.getElementById('decryptTab').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            document.getElementById('decryptTab').classList.add('text-gray-500');
+            document.getElementById('encryptContent').classList.remove('hidden');
+            document.getElementById('decryptContent').classList.add('hidden');
+        });
+        
+        document.getElementById('decryptTab').addEventListener('click', function() {
+            document.getElementById('decryptTab').classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+            document.getElementById('decryptTab').classList.remove('text-gray-500');
+            document.getElementById('encryptTab').classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            document.getElementById('encryptTab').classList.add('text-gray-500');
+            document.getElementById('decryptContent').classList.remove('hidden');
+            document.getElementById('encryptContent').classList.add('hidden');
+        });
+
+        // File encryption functionality
+        document.getElementById('encryptBtn').addEventListener('click', function() {
+            const fileInput = document.getElementById('fileToEncrypt');
+            const passwordInput = document.getElementById('encryptPassword');
+            const statusDiv = document.getElementById('status');
+            
+            if (!fileInput.files[0]) {
+                statusDiv.innerHTML = '<p class="text-red-500">Please select a file to encrypt</p>';
+                return;
+            }
+            
+            if (!passwordInput.value) {
+                statusDiv.innerHTML = '<p class="text-red-500">Please enter a password</p>';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    // Convert the file content to a string that can be encrypted
+                    const fileData = e.target.result;
+                    
+                    // Encrypt the file data using the password
+                    const encrypted = CryptoJS.AES.encrypt(fileData, passwordInput.value).toString();
+                    
+                    // Create encrypted file for download
+                    const blob = new Blob([encrypted], { type: 'application/encrypted' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Create download link
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = url;
+                    downloadLink.download = file.name + '.encrypted';
+                    downloadLink.className = 'text-blue-600 underline hover:text-blue-800';
+                    downloadLink.textContent = 'Download Encrypted File';
+                    
+                    statusDiv.innerHTML = '<p class="text-green-500 mb-2">File encrypted successfully!</p>';
+                    statusDiv.appendChild(downloadLink);
+                } catch (error) {
+                    statusDiv.innerHTML = '<p class="text-red-500">Encryption failed: ' + error.message + '</p>';
+                }
+            };
+            
+            reader.onerror = function() {
+                statusDiv.innerHTML = '<p class="text-red-500">Error reading file</p>';
+            };
+            
+            // Read the file as text (base64 encoding)
+            reader.readAsDataURL(file);
+        });
+
+        // File decryption functionality
+        document.getElementById('decryptBtn').addEventListener('click', function() {
+            const fileInput = document.getElementById('fileToDecrypt');
+            const passwordInput = document.getElementById('decryptPassword');
+            const statusDiv = document.getElementById('status');
+            
+            if (!fileInput.files[0]) {
+                statusDiv.innerHTML = '<p class="text-red-500">Please select a file to decrypt</p>';
+                return;
+            }
+            
+            if (!passwordInput.value) {
+                statusDiv.innerHTML = '<p class="text-red-500">Please enter a password</p>';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    // Get the encrypted data from the file
+                    const encryptedData = e.target.result;
+                    
+                    // Decrypt the data
+                    const decrypted = CryptoJS.AES.decrypt(encryptedData, passwordInput.value).toString(CryptoJS.enc.Utf8);
+                    
+                    if (!decrypted) {
+                        statusDiv.innerHTML = '<p class="text-red-500">Decryption failed: Incorrect password or corrupted file</p>';
+                        return;
+                    }
+                    
+                    // Create blob from decrypted data
+                    // Extract the mime type and data from the data URL
+                    const matches = decrypted.match(/^data:([^;]+);base64,(.+)$/);
+                    if (!matches || matches.length !== 3) {
+                        statusDiv.innerHTML = '<p class="text-red-500">Invalid file format after decryption</p>';
+                        return;
+                    }
+                    
+                    const mimeType = matches[1];
+                    const base64Data = matches[2];
+                    const binaryData = atob(base64Data);
+                    const byteArray = new Uint8Array(binaryData.length);
+                    
+                    for (let i = 0; i < binaryData.length; i++) {
+                        byteArray[i] = binaryData.charCodeAt(i);
+                    }
+                    
+                    const blob = new Blob([byteArray], { type: mimeType });
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Create download link for decrypted file
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = url;
+                    
+                    // Remove .encrypted extension if present
+                    let fileName = file.name;
+                    if (fileName.endsWith('.encrypted')) {
+                        fileName = fileName.slice(0, -10);
+                    }
+                    
+                    downloadLink.download = "decrypted_" + fileName;
+                    downloadLink.className = 'text-blue-600 underline hover:text-blue-800';
+                    downloadLink.textContent = 'Download Decrypted File';
+                    
+                    statusDiv.innerHTML = '<p class="text-green-500 mb-2">File decrypted successfully!</p>';
+                    statusDiv.appendChild(downloadLink);
+                } catch (error) {
+                    statusDiv.innerHTML = '<p class="text-red-500">Decryption failed: ' + error.message + '</p>';
+                }
+            };
+            
+            reader.onerror = function() {
+                statusDiv.innerHTML = '<p class="text-red-500">Error reading file</p>';
+            };
+            
+            // Read the encrypted file as text
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
